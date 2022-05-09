@@ -274,6 +274,15 @@ PyBridgeObject >> printString [
 ]
 
 { #category : #'spec - inspections' }
+PyBridgeObject >> pyBridgeCollectionInspectorNodeFor: aPybridgeCollection [
+
+	^ {(PyBridgeObjectInspectorNode hostObject: aPybridgeCollection)
+		  key: self;
+		  value: aPybridgeCollection asNativeList;
+		  yourself}
+]
+
+{ #category : #'spec - inspections' }
 PyBridgeObject >> pyBridgeInspection [
 
 	<inspectorPresentationOrder: 1 title: 'Remote raw'>
@@ -284,7 +293,7 @@ PyBridgeObject >> pyBridgeInspection [
 		(SpStringTableColumn title: 'Variable' evaluated: [ :e | e key ]).
 	table addColumn: (SpStringTableColumn
 			 title: 'Value'
-			 evaluated: [ :e | e value printString ]).
+			 evaluated: [ :e | [e value printString] on: Error do:[:err|  err printString  ] ]).
 	table items: self pyBridgeInspectionSlots.
 	^ table
 ]
@@ -293,13 +302,30 @@ PyBridgeObject >> pyBridgeInspection [
 PyBridgeObject >> pyBridgeInspectionSlots [
 
 	| dict isCollectionTrick |
+	true ifTrue: [ ^self treeDisplay ].
 	[ dict := self __dict__ ]
 		on: Error
 		do: [ :e | 
-			^ OrderedCollection with: (PyBridgeObjectInspectorNode new
-					   key: 'None';
-					   value: 'Object has no __dict__';
-					   yourself) ].
+			[ 
+			^ (self asNativeList)collect: [ :r | 
+				  | eClass value |
+				  eClass := r eClass name.
+				  eClass printString = 'GenericDimension' ifTrue: [ 
+					  eClass := r dynamicProperty _name ].
+				  value := eClass printString = 'GenericDimension'
+					           ifTrue: [ r dynamicProperty ]
+					           ifFalse: [ r ].
+				  (PyBridgeObjectInspectorNode hostObject: self)
+					  key: eClass;
+					  value: value;
+					  yourself ] ]
+				on: Error
+				do: [ 
+					^ OrderedCollection with: (PyBridgeObjectInspectorNode new
+							   key: 'None';
+							   value:
+								   'Cannot read object (has no __dict__ or is not a list)';
+							   yourself) ] ].
 
 	isCollectionTrick := [ self feature many asNativeObject ]
 		                     on: Error
@@ -327,6 +353,51 @@ PyBridgeObject >> pyBridgeInspectionSlots [
 			  yourself ]
 ]
 
+{ #category : #'spec - inspections' }
+PyBridgeObject >> pyBridgeInspectorNodeFor: aPybridgeObject [
+
+	| features |
+	features := aPybridgeObject eClass eAllStructuralFeatures
+		            asNativeList.
+
+	^ features collect: [ :f | 
+		  | featureName featureType |
+		  featureName := f name literalValue.
+		  featureType := f eContainer name literalValue.
+
+		  (PyBridgeObjectInspectorNode hostObject: self)
+			  key: featureName , ' (' , featureType , ')';
+			  value: (aPybridgeObject eGet: featureName);
+			  yourself ]
+]
+
+{ #category : #'spec - inspections' }
+PyBridgeObject >> pyBridgeTreeInspection [
+
+	<inspectorPresentationOrder: 1 title: 'Remote tree'>
+	| table |
+	table := SpTreeTablePresenter new.
+	table addColumn: (SpStringTableColumn title: '' evaluated: [ :e | 
+			 [ e key ]
+				 on: Error
+				 do: [ :err | err printString ] ]).
+	table roots: { self }.
+	table children: [ :pyBridgeObject | 
+		pyBridgeObject treeInspectionChildren ].
+	^ table
+]
+
+{ #category : #'spec - inspections' }
+PyBridgeObject >> pyBridgeTreeNodePrintString [
+
+	[ ^ self eClass name literalValue ]
+		on: Error
+		do: [  ].
+
+
+	^ self printString
+]
+
 { #category : #'reflective operations' }
 PyBridgeObject >> reverseServer [
 	^ self class reverseServer 
@@ -335,4 +406,63 @@ PyBridgeObject >> reverseServer [
 { #category : #'reflective operations' }
 PyBridgeObject >> reverseServerIsRunning [
 	^ self reverseServer isNotNil and: [ self reverseServer isRunning ]
+]
+
+{ #category : #'spec - inspections' }
+PyBridgeObject >> treeDisplay [
+
+	| features |
+	[features := self asNativeList.
+	^features collect:[:f| (PyBridgeObjectInspectorNode hostObject: self)
+			  key: f eClass name literalValue;
+			  value: (f);
+			  yourself]
+	  ] on: Error do: [  
+	features := self eClass eAllStructuralFeatures asNativeList].
+	
+
+	^ features collect: [ :f | 
+		  | featureName featureType featureValue isCollection |
+		  featureName := f name literalValue.
+		  featureType := f eContainer name literalValue.
+		  featureValue := self eGet: featureName.
+
+		  isCollection := [ featureValue many literalValue ]
+			                  on: Error
+			                  do: [ false ].
+		  (PyBridgeObjectInspectorNode hostObject: self)
+			  key: featureName , ' (' , featureType , ')';
+			  value: (isCollection
+					   ifTrue: [ featureValue items asNativeList ]
+					   ifFalse: [ featureValue ]);
+			  yourself ]
+]
+
+{ #category : #'spec - inspections' }
+PyBridgeObject >> treeInspectionChildren [
+
+	| features |
+	[^self asNativeList.	
+	  ] on: Error do: [  
+	[features := self eClass eAllStructuralFeatures asNativeList.
+	
+
+	^ features collect: [ :f | 
+		  | featureName featureType featureValue isCollection |
+		  featureName := f name literalValue.
+		  featureType := f eContainer name literalValue.
+		  featureValue := self eGet: featureName.
+
+		  isCollection := [ featureValue many literalValue ]
+			                  on: Error
+			                  do: [ false ].
+		  (PyBridgeObjectInspectorNode hostObject: self)
+			  key: featureName , ' (' , featureType , ')';
+			  value: (isCollection
+					   ifTrue: [ featureValue items asNativeList ]
+					   ifFalse: [ featureValue ]);
+			  yourself ]] on:Error do:[]].
+	
+
+	^ #()  
 ]
