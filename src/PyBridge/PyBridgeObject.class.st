@@ -310,7 +310,15 @@ PyBridgeObject >> pyBridgeInspectionSlots [
 				                     on: Error
 				                     do: [ true ] ].
 
-	isCollectionTrick ifTrue: [ 
+	[isCollectionTrick ifTrue: [ 
+		| elements |
+		elements := OrderedCollection new.
+		self asNativeList do: [ :e | 
+			elements add: ((PyBridgeObjectInspectorNode hostObject: e)
+					 key: e class name;
+					 value: e;
+					 yourself) ].
+		^ elements ].] on: Error do:[
 		| elements |
 		elements := OrderedCollection new.
 		dict items do: [ :k :v | 
