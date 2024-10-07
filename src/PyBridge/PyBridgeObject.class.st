@@ -264,13 +264,13 @@ PyBridgeObject >> post: dict action: action [
 { #category : #'reflective operations' }
 PyBridgeObject >> printOn: aStream [
 
-	aStream << self __str__ literalValue
+	aStream << ([self __str__ literalValue] on: Error do:[:err| err printString])
 ]
 
 { #category : #'reflective operations' }
 PyBridgeObject >> printString [
 
-	^ self __str__ literalValue
+	^ [self __str__ literalValue] on: Error do: [ :err| err printString ]
 ]
 
 { #category : #'spec - inspections' }
