@@ -26,6 +26,11 @@ PyBridgeObjectInspectorNode >> rawValue [
 	^ value
 ]
 
+{ #category : #'spec - inspections' }
+PyBridgeObjectInspectorNode >> treeInspectionChildren [
+	^value treeInspectionChildren
+]
+
 { #category : #accessing }
 PyBridgeObjectInspectorNode >> value: anObject [
 
