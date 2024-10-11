@@ -304,7 +304,7 @@ PyBridgeObject >> pyBridgeInspection [
 PyBridgeObject >> pyBridgeInspectionSlots [
 
 	| dict isCollectionTrick |
-	true ifTrue: [ ^self treeDisplay ].
+	"true ifTrue: [ ^self treeDisplay ]."
 	[ dict := self __dict__ ]
 		on: Error
 		do: [ :e | 
