@@ -382,6 +382,14 @@ PyBridgeObject >> pyBridgeInspectorNodeFor: aPybridgeObject [
 ]
 
 { #category : 'spec - inspections' }
+PyBridgeObject >> pyBridgeObjectValue [
+
+	self __dict__ items do: [ :k :v |
+		k literalValue = 'value' ifTrue: [ ^ v ] ].
+	^ nil
+]
+
+{ #category : 'spec - inspections' }
 PyBridgeObject >> pyBridgeTreeInspection [
 
 	<inspectorPresentationOrder: 1 title: 'Remote tree'>
