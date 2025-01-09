@@ -490,3 +490,8 @@ PyBridgeObject >> treeInspectionChildren [
 
 	^ #()  
 ]
+
+{ #category : 'reflective operations' }
+PyBridgeObject >> uuid [
+	^(self printString splitOn: Character space) last
+]
