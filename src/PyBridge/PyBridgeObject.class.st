@@ -231,6 +231,12 @@ PyBridgeObject >> instanceMap [
 	^ self class instanceMap
 ]
 
+{ #category : 'testing' }
+PyBridgeObject >> isPythonError [
+
+	^ [(self printString splitOn: Character space) first = '<error'] on: Error do:[true]
+]
+
 { #category : 'reflective operations' }
 PyBridgeObject >> performCall: methodName args: arguments [
 	| args dict |
