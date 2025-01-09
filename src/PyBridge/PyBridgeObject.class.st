@@ -278,7 +278,7 @@ PyBridgeObject >> printOn: aStream [
 { #category : 'reflective operations' }
 PyBridgeObject >> printString [
 
-	^ "["self __str__ literalValue"] on: Error do: [ :err| err printString ]"
+	^ [self __str__ literalValue] on: Error do: [ :err| err printString ]
 ]
 
 { #category : 'spec - inspections' }
